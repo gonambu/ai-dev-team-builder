@@ -130,6 +130,8 @@ echo "paneを作成中..."
 
 # 各ロールファイルに対してpaneを作成
 PANE_NUMBER=2
+# 順序を保証するために通常の配列を使用
+declare -a PANE_NUMBERS
 declare -A PANE_ROLES
 declare -A PANE_REPOS
 declare -A PANE_ROLE_NAMES
@@ -155,13 +157,14 @@ for role_file in "${ROLE_FILES[@]}"; do
     fi
     
     # paneを作成（常に垂直分割）
-    tmux split-window -v -c "$target_repo"
+    tmux split-window -h -c "$target_repo"
     
     # Claudeを起動
     tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$PANE_NUMBER" "claude --dangerously-skip-permissions" C-m
     sleep 3
     
     # pane情報を保存
+    PANE_NUMBERS+=($PANE_NUMBER)
     PANE_ROLES[$PANE_NUMBER]="$role_file"
     PANE_REPOS[$PANE_NUMBER]="$repo_type"
     PANE_ROLE_NAMES[$PANE_NUMBER]="$role_name"
@@ -169,7 +172,9 @@ for role_file in "${ROLE_FILES[@]}"; do
     PANE_NUMBER=$((PANE_NUMBER + 1))
 done
 
-# レイアウト調整をスキップ（縦分割のまま維持）
+# すべてのpaneが作成された後、レイアウトを調整して幅を均等にする
+echo "paneの幅を調整中..."
+tmux select-layout -t "$CURRENT_SESSION:$CURRENT_WINDOW" even-horizontal
 
 echo "チーム構成情報を作成中..."
 
@@ -183,7 +188,7 @@ Pane 1: コントロールパネル
 "
 
 # 各paneの情報を追加
-for pane_num in $(echo "${!PANE_ROLES[@]}" | tr ' ' '\n' | sort -n); do
+for pane_num in "${PANE_NUMBERS[@]}"; do
     role_name="${PANE_ROLE_NAMES[$pane_num]}"
     repo_type="${PANE_REPOS[$pane_num]}"
     
@@ -199,7 +204,7 @@ TEAM_OVERVIEW="${TEAM_OVERVIEW}
 echo "ロールを割り当て中..."
 
 # 各paneにロールを送信
-for pane_num in "${!PANE_ROLES[@]}"; do
+for pane_num in "${PANE_NUMBERS[@]}"; do
     role_file="${PANE_ROLES[$pane_num]}"
     
     # コミュニケーションコマンドセクションを作成
@@ -213,7 +218,7 @@ for pane_num in "${!PANE_ROLES[@]}"; do
 "
     
     # 他の各paneへの送信コマンド
-    for target_pane in $(echo "${!PANE_ROLES[@]}" | tr ' ' '\n' | sort -n); do
+    for target_pane in "${PANE_NUMBERS[@]}"; do
         if [ $target_pane -ne $pane_num ]; then
             target_role="${PANE_ROLE_NAMES[$target_pane]}"
             COMM_SECTION="${COMM_SECTION}- Pane ${target_pane}（${target_role}）へ: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} \$'メッセージ' ; sleep 3; tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} C-m\`
@@ -230,12 +235,6 @@ for pane_num in "${!PANE_ROLES[@]}"; do
 - 現在のウィンドウ: ${CURRENT_WINDOW}
 - 自分のpane番号: ${pane_num}"
     
-    # まずチーム構成情報を送信
-    tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$pane_num" "$TEAM_OVERVIEW"
-    sleep 2
-    tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$pane_num" C-m
-    sleep 2
-    
     # ロール内容を読み込み、変数を置換
     ROLE_CONTENT=$(sed -e "s/{{SESSION}}/$CURRENT_SESSION/g" \
                       -e "s/{{WINDOW}}/$CURRENT_WINDOW/g" \
@@ -246,10 +245,12 @@ for pane_num in "${!PANE_ROLES[@]}"; do
     # 既存のコミュニケーションセクションとセッション情報セクションを削除
     ROLE_CONTENT=$(echo "$ROLE_CONTENT" | sed '/^## 他のpaneへのコマンド送信方法/,/^## セッション情報/d' | sed '/^## セッション情報/,/^##\|$/d')
     
-    # 新しいセクションを追加
-    FULL_CONTENT="${ROLE_CONTENT}${COMM_SECTION}${SESSION_INFO}"
+    # チーム構成情報とロール情報を結合
+    FULL_CONTENT="${TEAM_OVERVIEW}
+
+${ROLE_CONTENT}${COMM_SECTION}${SESSION_INFO}"
     
-    # 個別のロールを送信
+    # すべての情報を一度に送信
     tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$pane_num" "$FULL_CONTENT"
     sleep 3
     tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$pane_num" C-m
@@ -267,7 +268,7 @@ echo "各paneの設定："
 echo "  Pane 1: コントロール用（tmux send-keysコマンドを実行）"
 
 # 各paneの情報を表示
-for pane_num in $(echo "${!PANE_ROLES[@]}" | tr ' ' '\n' | sort -n); do
+for pane_num in "${PANE_NUMBERS[@]}"; do
     role_name="${PANE_ROLE_NAMES[$pane_num]}"
     repo_type="${PANE_REPOS[$pane_num]}"
     echo "  Pane $pane_num: ${role_name} - $repo_type"
@@ -275,7 +276,7 @@ done
 
 echo ""
 echo "pane1から各paneにメッセージを送信できます："
-for pane_num in $(echo "${!PANE_ROLES[@]}" | tr ' ' '\n' | sort -n); do
+for pane_num in "${PANE_NUMBERS[@]}"; do
     role_name="${PANE_ROLE_NAMES[$pane_num]}"
     echo "  tmux send-keys -t $CURRENT_SESSION:$CURRENT_WINDOW.$pane_num 'メッセージ' C-m  # ${role_name}へ"
 done
