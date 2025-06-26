@@ -154,14 +154,8 @@ for role_file in "${ROLE_FILES[@]}"; do
         repo_type="仕様リポジトリ"
     fi
     
-    # paneを作成
-    if [ $PANE_NUMBER -eq 2 ]; then
-        # 最初のpaneは水平分割
-        tmux split-window -h -c "$target_repo"
-    else
-        # 以降は垂直分割（バランスを考慮）
-        tmux split-window -v -c "$target_repo"
-    fi
+    # paneを作成（常に垂直分割）
+    tmux split-window -v -c "$target_repo"
     
     # Claudeを起動
     tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$PANE_NUMBER" "claude --dangerously-skip-permissions" C-m
@@ -175,8 +169,7 @@ for role_file in "${ROLE_FILES[@]}"; do
     PANE_NUMBER=$((PANE_NUMBER + 1))
 done
 
-# レイアウトを調整
-tmux select-layout -t "$CURRENT_SESSION:$CURRENT_WINDOW" tiled
+# レイアウト調整をスキップ（縦分割のまま維持）
 
 echo "チーム構成情報を作成中..."
 
