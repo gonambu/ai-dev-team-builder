@@ -180,20 +180,20 @@ echo "チーム構成情報を作成中..."
 
 # チーム構成の概要を作成
 TEAM_OVERVIEW="=== チーム構成 ===
-このtmuxセッションには以下のpaneが存在します：
+このtmuxセッションには以下のメンバーが参加しています：
 
-Pane 1: コントロールパネル
+コントロールパネル (Pane 1)
   - 役割: 全体の制御とコマンド実行
-  - 他のpaneへのメッセージ送信を担当
+  - 他のメンバーへのメッセージ送信を担当
 "
 
-# 各paneの情報を追加
+# 各メンバーの情報を追加
 for pane_num in "${PANE_NUMBERS[@]}"; do
     role_name="${PANE_ROLE_NAMES[$pane_num]}"
     repo_type="${PANE_REPOS[$pane_num]}"
     
     TEAM_OVERVIEW="${TEAM_OVERVIEW}
-Pane ${pane_num}: ${role_name}
+${role_name} (Pane ${pane_num})
   - 作業ディレクトリ: ${repo_type}"
 done
 
@@ -210,20 +210,36 @@ for pane_num in "${PANE_NUMBERS[@]}"; do
     # コミュニケーションコマンドセクションを作成
     COMM_SECTION="
 
-## 他のpaneへのコマンド送信方法
+## 他のメンバーへのコマンド送信方法
+
+以下のように役割名を使ってメッセージを送信できます：
 
 "
-    # pane1への送信コマンド
-    COMM_SECTION="${COMM_SECTION}- Pane 1（コントロールパネル）へ: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.1 \"echo '[\\$(date +%H:%M:%S)] メッセージ'\" C-m\`
+    # コントロールパネルへの送信コマンド
+    COMM_SECTION="${COMM_SECTION}- コントロールパネルへ: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.1 \"echo '[\\$(date +%H:%M:%S)] メッセージ'\" C-m\`
 "
     
-    # 他の各paneへの送信コマンド
+    # 他の各役割への送信コマンド
     for target_pane in "${PANE_NUMBERS[@]}"; do
         if [ $target_pane -ne $pane_num ]; then
             target_role="${PANE_ROLE_NAMES[$target_pane]}"
-            COMM_SECTION="${COMM_SECTION}- Pane ${target_pane}（${target_role}）へ: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} \$'メッセージ' ; sleep 3; tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} C-m\`
+            COMM_SECTION="${COMM_SECTION}- ${target_role}へ: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} \$'メッセージ' ; sleep 3; tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} C-m\`
 "
         fi
+    done
+    
+    # 役割名とpane番号のマッピング情報を追加
+    COMM_SECTION="${COMM_SECTION}
+### 役割とpane番号の対応表
+
+| 役割名 | Pane番号 |
+|--------|----------|
+| コントロールパネル | 1 |"
+    
+    for mapping_pane in "${PANE_NUMBERS[@]}"; do
+        mapping_role="${PANE_ROLE_NAMES[$mapping_pane]}"
+        COMM_SECTION="${COMM_SECTION}
+| ${mapping_role} | ${mapping_pane} |"
     done
     
     # セッション情報セクションを作成
