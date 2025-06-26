@@ -58,7 +58,7 @@ if [ -z "$IMPL_REPO_NAME" ]; then
 fi
 
 # ROLE_DIRのデフォルト値設定（オプション）
-: ${ROLE_DIR:="$HOME/claude-workflow-roles"}
+: ${ROLE_DIR:="./claude-workflow-roles"}
 
 # 引数チェック
 if [ $# -eq 0 ]; then
