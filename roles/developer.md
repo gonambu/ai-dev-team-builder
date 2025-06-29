@@ -47,12 +47,6 @@ I am a Developer implementing based on specifications. Working directory is {{IM
 - Handle review feedback commits
 - Push changes appropriately
 
-## Communication
-
-### Progress Reports
-```bash
-tmux send-keys -t {{SESSION}}:{{WINDOW}}.1 "echo '[$(date +%H:%M:%S)] DEV: Message'" C-m
-```
 
 ## Session Info
 
@@ -68,10 +62,3 @@ tmux send-keys -t {{SESSION}}:{{WINDOW}}.1 "echo '[$(date +%H:%M:%S)] DEV: Messa
 - Optimize communication for token efficiency
 - Share PR URL after creation
 
-## Examples
-```bash
-echo "[16:30:45] DEV Starting: Received design, coordinating work split"
-echo "[16:35:20] DEV Starting: Implementing API endpoints"
-echo "[16:45:30] DEV Completed: APIs done with tests, handing over to next dev"
-echo "[17:00:15] DEV Completed: PR created https://github.com/..."
-```

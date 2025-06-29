@@ -224,61 +224,20 @@ done
 echo "Adjusting pane layout to tiled..."
 tmux select-layout -t "$CURRENT_SESSION:$CURRENT_WINDOW" tiled
 
-echo "Creating team composition..."
-
-# Create team composition overview
-TEAM_OVERVIEW="=== Team Composition ===
-This tmux session includes the following members:
-
-Control Panel (Pane 1)
-  - Role: Overall control and command execution
-  - Responsible for sending messages to other members
-"
-
-# 各メンバーの情報を追加
-for pane_num in "${PANE_NUMBERS[@]}"; do
-    role_name="${PANE_ROLE_NAMES[$pane_num]}"
-    repo_type="${PANE_REPOS[$pane_num]}"
-    
-    TEAM_OVERVIEW="${TEAM_OVERVIEW}
-${role_name} (Pane ${pane_num})
-  - Working directory: ${repo_type}"
-done
-
-TEAM_OVERVIEW="${TEAM_OVERVIEW}
-
-==================="
-
 echo "Assigning roles..."
 
 # Send roles to each pane
 for pane_num in "${PANE_NUMBERS[@]}"; do
     role_file="${PANE_ROLE_FILES[$pane_num]}"
     
-    # Create communication command section
+    # Create communication section
     COMM_SECTION="
 
-## Sending Commands to Other Members
+## Team Members and Communication
 
-You can send messages using role names as follows:
+To send messages: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.[pane] 'message' C-m\`
 
-"
-    # Command to control panel
-    COMM_SECTION="${COMM_SECTION}- To Control Panel: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.1 \"echo '[\\$(date +%H:%M:%S)] message'\" C-m\`
-"
-    
-    # Commands to other roles
-    for target_pane in "${PANE_NUMBERS[@]}"; do
-        if [ $target_pane -ne $pane_num ]; then
-            target_role="${PANE_ROLE_NAMES[$target_pane]}"
-            COMM_SECTION="${COMM_SECTION}- To ${target_role}: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} \$'message' ; sleep 3; tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} C-m\`
-"
-        fi
-    done
-    
-    # Add role-pane mapping
-    COMM_SECTION="${COMM_SECTION}
-### Role-Pane Number Mapping
+### Role-Pane Mapping
 
 | Role Name | Pane Number |
 |-----------|-------------|
@@ -309,10 +268,8 @@ You can send messages using role names as follows:
     # Remove existing communication and session info sections
     ROLE_CONTENT=$(echo "$ROLE_CONTENT" | sed '/^## Communication/,/^## Session Info/d' | sed '/^## Session Info/,/^##\|$/d')
     
-    # Combine team composition and role information
-    FULL_CONTENT="${TEAM_OVERVIEW}
-
-## Common Rules
+    # Combine role information with common rules
+    FULL_CONTENT="## Common Rules
 
 ### IMPORTANT: Wait for Instructions
 **DO NOT START ANY WORK UNTIL YOU RECEIVE SPECIFIC INSTRUCTIONS**

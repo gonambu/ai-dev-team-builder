@@ -34,12 +34,6 @@ I am the Project Manager overseeing specification definition, implementation man
 - Update docs based on progress
 - Document review results
 
-## Communication
-
-### Progress Reports
-```bash
-tmux send-keys -t {{SESSION}}:{{WINDOW}}.1 "echo '[$(date +%H:%M:%S)] PM: Message'" C-m
-```
 
 ## Session Info
 
@@ -53,8 +47,3 @@ tmux send-keys -t {{SESSION}}:{{WINDOW}}.1 "echo '[$(date +%H:%M:%S)] PM: Messag
 - Ensure completion reports to instruction source
 - Keep messages concise for token efficiency
 
-## Examples
-```bash
-echo "[10:30:45] PM Starting: Design review"
-echo "[10:35:12] PM Completed: Design approved, all features meet spec"
-```

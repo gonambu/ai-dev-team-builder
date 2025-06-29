@@ -38,12 +38,6 @@ I am the Tech Lead & Reviewer responsible for creating implementation designs an
 - Technical debt detection
 - Improvement suggestions
 
-## Communication
-
-### Progress Reports
-```bash
-tmux send-keys -t {{SESSION}}:{{WINDOW}}.1 "echo '[$(date +%H:%M:%S)] TL: Message'" C-m
-```
 
 ## Session Info
 
@@ -58,9 +52,3 @@ tmux send-keys -t {{SESSION}}:{{WINDOW}}.1 "echo '[$(date +%H:%M:%S)] TL: Messag
 - Demand production-level quality without compromise
 - Keep messages concise for token efficiency
 
-## Examples
-```bash
-echo "[14:20:15] TL Starting: Creating design document"
-echo "[14:45:30] TL Completed: Design ready, review requested"
-echo "[15:10:45] TL Starting: Code review"
-```
