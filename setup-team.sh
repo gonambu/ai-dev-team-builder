@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Claude Workflow Setup Script
+# AI Team Setup Script
 # 
-# Sets up Claude development team workflow using tmux.
+# Sets up AI development team workflow using tmux.
 # Creates panes based on team-config.yml configuration.
 #
 # Required environment variables:
@@ -12,7 +12,7 @@
 #   IMPL_REPO_NAME  - Implementation repository name
 #
 # Optional environment variables:
-#   ROLE_DIR        - Directory for role definition files (default: ./claude-workflow-roles)
+#   ROLE_DIR        - Directory for role definition files (default: ./roles)
 #   TEAM_CONFIG     - Path to team configuration file (default: ./team-config.yml)
 #
 # Usage:
@@ -21,8 +21,8 @@
 #   export GITHUB_ORG=myorg
 #   export SPEC_REPO_NAME=myorg-specifications
 #   export IMPL_REPO_NAME=myorg-app
-#   ./setup-claude-workflow.sh              # Use default repositories
-#   ./setup-claude-workflow.sh 2            # Use worktree 2
+#   ./setup-team.sh              # Use default repositories
+#   ./setup-team.sh 2            # Use worktree 2
 
 # .envファイルが存在する場合は読み込む
 if [ -f .env ]; then
@@ -59,7 +59,7 @@ if [ -z "$IMPL_REPO_NAME" ]; then
 fi
 
 # Set default values for optional variables
-: ${ROLE_DIR:="./claude-workflow-roles"}
+: ${ROLE_DIR:="./roles"}
 : ${TEAM_CONFIG:="./team-config.yml"}
 
 # 引数チェック
@@ -190,9 +190,9 @@ for role_file in "${ROLE_FILES[@]}"; do
     PANE_NUMBER=$((PANE_NUMBER + 1))
 done
 
-# すべてのpaneが作成された後、レイアウトを調整して幅を均等にする
-echo "Adjusting pane widths..."
-tmux select-layout -t "$CURRENT_SESSION:$CURRENT_WINDOW" even-horizontal
+# Adjust layout to tiled format for better organization
+echo "Adjusting pane layout to tiled..."
+tmux select-layout -t "$CURRENT_SESSION:$CURRENT_WINDOW" tiled
 
 echo "Creating team composition..."
 

@@ -36,8 +36,8 @@ temp/
 *.backup
 *.old
 
-# Claude workflow role files (if they contain sensitive info)
-# claude-workflow-roles/
+# Role files (if they contain sensitive info)
+# roles/
 
 # Session-specific files
 .tmux-session*

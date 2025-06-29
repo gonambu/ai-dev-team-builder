@@ -1,6 +1,6 @@
 # AI Dev Team Builder
 
-tmuxとClaude CLIを使用して、AIエージェントによる開発チームを構築するツールです。複数のClaudeインスタンスが異なる役割（プロジェクトマネージャー、開発者、テックリードなど）を担当し、協調して作業を進めます。
+tmuxとAI CLIツールを使用して、AIエージェントによる開発チームを構築するツールです。複数のAIインスタンスが異なる役割（プロジェクトマネージャー、開発者、テックリードなど）を担当し、協調して作業を進めます。
 
 ## 必要なツール
 
@@ -75,7 +75,7 @@ team:
 
 ### 3. 役割定義ファイルの準備
 
-`claude-workflow-roles`ディレクトリに以下の役割定義ファイルが含まれています：
+`roles`ディレクトリに以下の役割定義ファイルが含まれています：
 
 - `manager.md` - プロジェクトマネージャー
 - `techlead.md` - テックリード兼レビュー担当
@@ -104,7 +104,7 @@ SPEC_REPO_NAME="your-specifications"
 IMPL_REPO_NAME="your-application"
 
 # オプション環境変数
-# ROLE_DIR="./claude-workflow-roles"
+# ROLE_DIR="./roles"
 # TEAM_CONFIG="./team-config.yml"
 ```
 
@@ -118,7 +118,7 @@ export SPEC_REPO_NAME="your-specifications"    # 仕様リポジトリ名
 export IMPL_REPO_NAME="your-app"              # 実装リポジトリ名
 
 # オプション環境変数
-export ROLE_DIR="./claude-workflow-roles"      # 役割定義ファイルのディレクトリ
+export ROLE_DIR="./roles"      # 役割定義ファイルのディレクトリ
 export TEAM_CONFIG="./team-config.yml"         # チーム構成ファイル
 ```
 
@@ -130,10 +130,10 @@ export TEAM_CONFIG="./team-config.yml"         # チーム構成ファイル
 
 ```bash
 # デフォルトのリポジトリでチームを起動
-./setup-claude-workflow.sh
+./setup-team.sh
 
 # worktreeを使用する場合（例：worktree名が "feature-1"）
-./setup-claude-workflow.sh feature-1
+./setup-team.sh feature-1
 ```
 
 ### Git Worktreeの命名規則
@@ -157,26 +157,27 @@ cd $REPO_BASE_DIR/$GITHUB_ORG/$IMPL_REPO_NAME
 git worktree add -b feature-auth ../your-app-feature-auth
 
 # その後、スクリプトを実行
-./setup-claude-workflow.sh feature-auth
+./setup-team.sh feature-auth
 ```
 
 ## チーム構成
 
 スクリプトは`team-config.yml`に基づいてpaneを作成します。同じ役割の複数インスタンスがサポートされており、自動的に番号が付けられます。
 
-例：開発者4名のチーム構成
+例：開発者4名のチーム構成（タイルレイアウト）
 ```
-+--------+--------+--------+--------+--------+--------+
-| Pane 1 | Pane 2 | Pane 3 | Pane 4 | Pane 5 | Pane 6 |
-|        |        |        |        |        |        |
-|Control |Manager |TechLead|Dev 1   |Dev 2   |Dev 3   |
-|        |        |        |        |        |        |
-+--------+--------+--------+--------+--------+--------+
++--------+--------+--------+
+| Pane 1 | Pane 2 | Pane 3 |
+|Control |Manager |TechLead|
++--------+--------+--------+
+| Pane 4 | Pane 5 | Pane 6 |
+| Dev 1  | Dev 2  | Dev 3  |
++--------+--------+--------+
 ```
 
 - **Pane 1**: コントロールパネル（ユーザーがコマンドを実行）
 - **Pane 2-N**: `team-config.yml`の定義に基づいて作成
-- 各paneの幅は自動的に均等に調整されます
+- tmuxの`tiled`レイアウトにより、paneが自動的にタイル状に配置されます
 
 ## 共通ルール
 
@@ -212,7 +213,7 @@ tmux send-keys -t session:window.3 '実装を進めてください' C-m
 
 ### 新しい役割の追加
 
-1. `claude-workflow-roles/`に新しい`.md`ファイルを作成
+1. `roles/`に新しい`.md`ファイルを作成
 2. ファイル名は役割を表すものに（例: `qa-engineer.md`）
 3. `team-config.yml`に新しい役割を追加
 
@@ -276,9 +277,9 @@ echo $IMPL_REPO_NAME
 tmux new-window
 ```
 
-### Claude CLIが起動しない
+### AI CLIが起動しない
 
-Claude CLIが正しくインストールされているか確認：
+AI CLIツールが正しくインストールされているか確認：
 
 ```bash
 which claude

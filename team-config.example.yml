@@ -2,7 +2,7 @@
 # List roles in the order they should be created
 # Duplicate roles are allowed for multiple instances
 #
-# Available roles (files in claude-workflow-roles/):
+# Available roles (files in roles/):
 #   - manager    : Project Manager
 #   - techlead   : Tech Lead & Reviewer  
 #   - developer  : Developer
