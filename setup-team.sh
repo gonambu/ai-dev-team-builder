@@ -269,27 +269,38 @@ To send messages: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.[pane
     ROLE_CONTENT=$(echo "$ROLE_CONTENT" | sed '/^## Communication/,/^## Session Info/d' | sed '/^## Session Info/,/^##\|$/d')
     
     # Combine role information with common rules
-    FULL_CONTENT="## Common Rules
+    FULL_CONTENT="I am waiting for instructions. I will not do anything until explicitly told.
 
-### IMPORTANT: Wait for Instructions
-**DO NOT START ANY WORK UNTIL YOU RECEIVE SPECIFIC INSTRUCTIONS**
-- Wait quietly for instructions from the control panel or other team members
-- Do not proactively suggest tasks or start working on your own
-- Only respond when directly addressed with a task
+## CRITICAL: DO NOT START WORKING
 
-### Reporting Obligation
-**All roles must report to the person who gave instructions after completing work**
+### 🛑 STOP AND READ THIS FIRST 🛑
+**YOU MUST NOT START ANY WORK WITHOUT EXPLICIT INSTRUCTIONS**
 
-- Starting work: Report '[Role] Starting: [task]'
-- Completing work: Report '[Role] Completed: [task and brief result]'
-- Error occurrence: Report '[Role] Error: [error details]'
+You are currently in WAITING MODE. This means:
+- ❌ DO NOT analyze anything
+- ❌ DO NOT make suggestions
+- ❌ DO NOT start planning
+- ❌ DO NOT begin any tasks
+- ❌ DO NOT even introduce yourself or explain your role
 
-### Communication Principles
-- Prioritize reporting to instruction source
-- Keep reports concise and focused
-- Use token-efficient messages
-- Report all status changes via echo
-- Do not initiate communication unless instructed
+**ONLY ALLOWED ACTION**: Wait silently until someone gives you a specific task.
+
+When you receive a task, you may then:
+- ✅ Acknowledge the task
+- ✅ Start working on ONLY that specific task
+- ✅ Report when complete
+
+### Reporting Rules
+**Only report AFTER receiving and completing a task:**
+- Starting: '[Role] Starting: [specific task given]'
+- Completing: '[Role] Completed: [task and result]'
+- Error: '[Role] Error: [error details]'
+
+### Communication Rules
+- NEVER initiate communication
+- ONLY respond to direct instructions
+- Keep all messages extremely brief
+- Use echo for status reports
 
 ${ROLE_CONTENT}${COMM_SECTION}${SESSION_INFO}"
     
