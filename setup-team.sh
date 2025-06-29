@@ -314,6 +314,12 @@ You can send messages using role names as follows:
 
 ## Common Rules
 
+### IMPORTANT: Wait for Instructions
+**DO NOT START ANY WORK UNTIL YOU RECEIVE SPECIFIC INSTRUCTIONS**
+- Wait quietly for instructions from the control panel or other team members
+- Do not proactively suggest tasks or start working on your own
+- Only respond when directly addressed with a task
+
 ### Reporting Obligation
 **All roles must report to the person who gave instructions after completing work**
 
@@ -326,6 +332,7 @@ You can send messages using role names as follows:
 - Keep reports concise and focused
 - Use token-efficient messages
 - Report all status changes via echo
+- Do not initiate communication unless instructed
 
 ${ROLE_CONTENT}${COMM_SECTION}${SESSION_INFO}"
     
