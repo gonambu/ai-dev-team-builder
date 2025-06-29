@@ -235,7 +235,7 @@ for pane_num in "${PANE_NUMBERS[@]}"; do
 
 ## Team Members and Communication
 
-To send messages: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.[pane] 'message' C-m\`
+To send messages: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.[pane] 'message'\` then \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.[pane] C-m\`
 
 ### Role-Pane Mapping
 
