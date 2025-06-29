@@ -1,0 +1,39 @@
+# AI Dev Team Configuration Example
+# List roles in the order they should be created
+# Duplicate roles are allowed for multiple instances
+#
+# Available roles (files in claude-workflow-roles/):
+#   - manager    : Project Manager
+#   - techlead   : Tech Lead & Reviewer  
+#   - developer  : Developer
+#
+# Example configurations:
+
+# Standard team with 2 developers
+team:
+  - manager
+  - techlead
+  - developer
+  - developer
+
+# # Large team with 4 developers
+# team:
+#   - manager
+#   - techlead
+#   - developer
+#   - developer
+#   - developer
+#   - developer
+
+# # Minimal team
+# team:
+#   - manager
+#   - developer
+
+# # Multiple tech leads
+# team:
+#   - manager
+#   - techlead
+#   - techlead
+#   - developer
+#   - developer

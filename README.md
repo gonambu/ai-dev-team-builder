@@ -18,6 +18,15 @@ tmuxとClaude CLIを使用して、AIエージェントによる開発チーム�
   npm install -g @anthropic-ai/claude-cli
   ```
 
+- **yq**: YAML処理ツール（チーム構成ファイルの読み込みに必要）
+  ```bash
+  # macOS
+  brew install yq
+  
+  # Ubuntu/Debian
+  sudo apt-get install yq
+  ```
+
 - **Git**: バージョン管理システム（worktree機能を使用）
   ```bash
   # 通常はプリインストールされていますが、必要に応じて
@@ -33,30 +42,46 @@ git clone https://github.com/your-username/ai-dev-team-builder.git
 cd ai-dev-team-builder
 ```
 
-### 2. 役割定義ファイルの準備
+### 2. チーム構成の定義
 
-`claude-workflow-roles`ディレクトリに役割定義ファイル（`.md`形式）を配置します。
+`team-config.yml`ファイルでチーム構成を定義します：
 
 ```bash
-mkdir -p ~/claude-workflow-roles
-cp claude-workflow-roles/*.md ~/claude-workflow-roles/
+# サンプルをコピーして編集
+cp team-config.example.yml team-config.yml
+vi team-config.yml  # またはお好みのエディタで編集
 ```
 
-各役割ファイルは以下の形式で記述します：
+`team-config.yml`の例：
+```yaml
+# 標準的なチーム構成（開発者2名）
+team:
+  - manager      # プロジェクトマネージャー
+  - techlead     # テックリード兼レビュー担当
+  - developer    # 開発者1
+  - developer    # 開発者2
 
-```markdown
-# 役割名
-
-役割の説明...
-
-## 役割と責任
-
-- 責任1
-- 責任2
-...
+# 大規模チーム（開発者4名）の例
+# team:
+#   - manager
+#   - techlead
+#   - developer
+#   - developer
+#   - developer
+#   - developer
 ```
 
-### 3. 環境変数の設定
+同じ役割を複数回リストすることで、その役割の複数インスタンスを作成できます。
+
+### 3. 役割定義ファイルの準備
+
+`claude-workflow-roles`ディレクトリに以下の役割定義ファイルが含まれています：
+
+- `manager.md` - プロジェクトマネージャー
+- `techlead.md` - テックリード兼レビュー担当
+- `developer.md` - 開発者
+
+### 4. 環境変数の設定
 
 環境変数の設定には以下の2つの方法があります：
 
@@ -79,7 +104,8 @@ SPEC_REPO_NAME="your-specifications"
 IMPL_REPO_NAME="your-application"
 
 # オプション環境変数
-# ROLE_DIR="$HOME/claude-workflow-roles"
+# ROLE_DIR="./claude-workflow-roles"
+# TEAM_CONFIG="./team-config.yml"
 ```
 
 #### 方法2: シェルの環境変数として設定
@@ -92,20 +118,11 @@ export SPEC_REPO_NAME="your-specifications"    # 仕様リポジトリ名
 export IMPL_REPO_NAME="your-app"              # 実装リポジトリ名
 
 # オプション環境変数
-export ROLE_DIR="$HOME/claude-workflow-roles"  # 役割定義ファイルのディレクトリ（デフォルト値あり）
+export ROLE_DIR="./claude-workflow-roles"      # 役割定義ファイルのディレクトリ
+export TEAM_CONFIG="./team-config.yml"         # チーム構成ファイル
 ```
 
-永続的に設定する場合は`.bashrc`や`.zshrc`に追加：
-
-```bash
-# AI Dev Team Builder環境変数
-export REPO_BASE_DIR="$HOME/ghq/github.com"
-export GITHUB_ORG="your-org"
-export SPEC_REPO_NAME="your-specifications"
-export IMPL_REPO_NAME="your-app"
-```
-
-**注意**: `.env`ファイルは`.gitignore`に含まれているため、Gitにコミットされません。
+**注意**: `.env`ファイルと`team-config.yml`は`.gitignore`に含まれているため、Gitにコミットされません。
 
 ## 使用方法
 
@@ -133,11 +150,11 @@ worktree作成例：
 ```bash
 # 仕様リポジトリ
 cd $REPO_BASE_DIR/$GITHUB_ORG/$SPEC_REPO_NAME
-git worktree add -b feature-auth ../loglass-specifications-feature-auth
+git worktree add -b feature-auth ../your-specifications-feature-auth
 
 # 実装リポジトリ
 cd $REPO_BASE_DIR/$GITHUB_ORG/$IMPL_REPO_NAME
-git worktree add -b feature-auth ../loglass-feature-auth
+git worktree add -b feature-auth ../your-app-feature-auth
 
 # その後、スクリプトを実行
 ./setup-claude-workflow.sh feature-auth
@@ -145,22 +162,35 @@ git worktree add -b feature-auth ../loglass-feature-auth
 
 ## チーム構成
 
-スクリプトは、役割ファイルの数に応じて動的にpaneを作成します。すべてのpaneは垂直分割で作成され、最終的に`even-horizontal`レイアウトが適用されて均等な幅に調整されます。
+スクリプトは`team-config.yml`に基づいてpaneを作成します。同じ役割の複数インスタンスがサポートされており、自動的に番号が付けられます。
 
-例：4つの役割ファイルがある場合のレイアウト
+例：開発者4名のチーム構成
 ```
-+--------+--------+--------+--------+--------+
-| Pane 1 | Pane 2 | Pane 3 | Pane 4 | Pane 5 |
-|        |        |        |        |        |
-|コント  |マネー  | 開発者 |テック  |  QA    |
-|ロール  |ジャー  |        |リード  |        |
-|        |        |        |        |        |
-+--------+--------+--------+--------+--------+
++--------+--------+--------+--------+--------+--------+
+| Pane 1 | Pane 2 | Pane 3 | Pane 4 | Pane 5 | Pane 6 |
+|        |        |        |        |        |        |
+|Control |Manager |TechLead|Dev 1   |Dev 2   |Dev 3   |
+|        |        |        |        |        |        |
++--------+--------+--------+--------+--------+--------+
 ```
 
 - **Pane 1**: コントロールパネル（ユーザーがコマンドを実行）
-- **Pane 2-N**: 役割ファイルに基づいて動的に作成（垂直分割）
+- **Pane 2-N**: `team-config.yml`の定義に基づいて作成
 - 各paneの幅は自動的に均等に調整されます
+
+## 共通ルール
+
+すべての役割に以下の共通ルールが自動的に適用されます：
+
+### 報告義務
+- 作業開始時: `[Role] Starting: [task]`
+- 作業完了時: `[Role] Completed: [task and result]`
+- エラー発生時: `[Role] Error: [error details]`
+
+### コミュニケーション原則
+- 指示元への報告を優先
+- 簡潔で要点を絞った報告
+- トークン効率を考慮したメッセージ
 
 ## pane間のコミュニケーション
 
@@ -170,7 +200,7 @@ git worktree add -b feature-auth ../loglass-feature-auth
 # Pane 2（マネージャー）へ
 tmux send-keys -t session:window.2 'タスクを開始してください' C-m
 
-# Pane 3（開発者）へ
+# Pane 3（開発者1）へ
 tmux send-keys -t session:window.3 '実装を進めてください' C-m
 ```
 
@@ -178,15 +208,53 @@ tmux send-keys -t session:window.3 '実装を進めてください' C-m
 
 各paneには、他のpaneと通信するためのコマンドが自動的に提供されます。
 
-## 役割ファイルの追加
+## カスタマイズ
 
-新しい役割を追加するには：
+### 新しい役割の追加
 
-1. `~/claude-workflow-roles/`に新しい`.md`ファイルを作成
-2. ファイル名は役割を表すものに（例: `pane5-qa-engineer.md`）
-3. ファイル内で`{{IMPL_REPO}}`を使用すると実装リポジトリ、それ以外は仕様リポジトリで起動
+1. `claude-workflow-roles/`に新しい`.md`ファイルを作成
+2. ファイル名は役割を表すものに（例: `qa-engineer.md`）
+3. `team-config.yml`に新しい役割を追加
+
+### 役割ファイルの形式
+
+```markdown
+# Role Name
+
+Role description and primary responsibilities.
+
+## Responsibilities
+
+- Specific responsibility 1
+- Specific responsibility 2
+...
+
+## Important
+
+- Key behaviors
+- Constraints
+```
+
+`{{IMPL_REPO}}`を含む役割は実装リポジトリで、それ以外は仕様リポジトリで起動します。
 
 ## トラブルシューティング
+
+### エラー: yqが見つかりません
+
+```bash
+# macOS
+brew install yq
+
+# その他のプラットフォーム
+https://github.com/mikefarah/yq#install
+```
+
+### エラー: team-config.ymlが見つかりません
+
+```bash
+cp team-config.example.yml team-config.yml
+vi team-config.yml  # チーム構成を定義
+```
 
 ### エラー: リポジトリが見つかりません
 

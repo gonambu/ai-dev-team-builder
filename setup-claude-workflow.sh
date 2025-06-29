@@ -2,30 +2,31 @@
 
 # Claude Workflow Setup Script
 # 
-# このスクリプトは、tmuxを使用してClaude開発チームのワークフローをセットアップします。
-# ROLE_DIR内のファイル数に応じて動的にpaneを作成します。
+# Sets up Claude development team workflow using tmux.
+# Creates panes based on team-config.yml configuration.
 #
-# 必須環境変数:
-#   REPO_BASE_DIR   - リポジトリのベースディレクトリ (例: $HOME/ghq/github.com)
-#   GITHUB_ORG      - GitHubの組織名
-#   SPEC_REPO_NAME  - 仕様リポジトリ名
-#   IMPL_REPO_NAME  - 実装リポジトリ名
+# Required environment variables:
+#   REPO_BASE_DIR   - Base directory for repositories (e.g. $HOME/ghq/github.com)
+#   GITHUB_ORG      - GitHub organization name
+#   SPEC_REPO_NAME  - Specification repository name
+#   IMPL_REPO_NAME  - Implementation repository name
 #
-# オプション環境変数:
-#   ROLE_DIR        - ロール定義ファイルのディレクトリ (デフォルト: $HOME/claude-workflow-roles)
+# Optional environment variables:
+#   ROLE_DIR        - Directory for role definition files (default: ./claude-workflow-roles)
+#   TEAM_CONFIG     - Path to team configuration file (default: ./team-config.yml)
 #
-# 使用例:
-#   # 環境変数を設定してから実行
+# Usage:
+#   # Set environment variables before running
 #   export REPO_BASE_DIR=$HOME/ghq/github.com
 #   export GITHUB_ORG=myorg
 #   export SPEC_REPO_NAME=myorg-specifications
 #   export IMPL_REPO_NAME=myorg-app
-#   ./setup-claude-workflow.sh              # デフォルトのリポジトリを使用
-#   ./setup-claude-workflow.sh 2            # worktree 2を使用
+#   ./setup-claude-workflow.sh              # Use default repositories
+#   ./setup-claude-workflow.sh 2            # Use worktree 2
 
 # .envファイルが存在する場合は読み込む
 if [ -f .env ]; then
-    echo ".envファイルを読み込み中..."
+    echo "Loading .env file..."
     # .envファイルを読み込む（export文を評価）
     set -a
     source .env
@@ -34,31 +35,32 @@ fi
 
 # 環境変数の確認（必須）
 if [ -z "$REPO_BASE_DIR" ]; then
-    echo "エラー: REPO_BASE_DIR 環境変数を設定してください"
-    echo "例: export REPO_BASE_DIR=\$HOME/ghq/github.com"
+    echo "Error: Please set REPO_BASE_DIR environment variable"
+    echo "Example: export REPO_BASE_DIR=\$HOME/ghq/github.com"
     exit 1
 fi
 
 if [ -z "$GITHUB_ORG" ]; then
-    echo "エラー: GITHUB_ORG 環境変数を設定してください"
-    echo "例: export GITHUB_ORG=your-org-name"
+    echo "Error: Please set GITHUB_ORG environment variable"
+    echo "Example: export GITHUB_ORG=your-org-name"
     exit 1
 fi
 
 if [ -z "$SPEC_REPO_NAME" ]; then
-    echo "エラー: SPEC_REPO_NAME 環境変数を設定してください"
-    echo "例: export SPEC_REPO_NAME=your-spec-repo"
+    echo "Error: Please set SPEC_REPO_NAME environment variable"
+    echo "Example: export SPEC_REPO_NAME=your-spec-repo"
     exit 1
 fi
 
 if [ -z "$IMPL_REPO_NAME" ]; then
-    echo "エラー: IMPL_REPO_NAME 環境変数を設定してください"
-    echo "例: export IMPL_REPO_NAME=your-impl-repo"
+    echo "Error: Please set IMPL_REPO_NAME environment variable"
+    echo "Example: export IMPL_REPO_NAME=your-impl-repo"
     exit 1
 fi
 
-# ROLE_DIRのデフォルト値設定（オプション）
+# Set default values for optional variables
 : ${ROLE_DIR:="./claude-workflow-roles"}
+: ${TEAM_CONFIG:="./team-config.yml"}
 
 # 引数チェック
 if [ $# -eq 0 ]; then
@@ -74,42 +76,58 @@ SPEC_REPO="${REPO_BASE_DIR}/${GITHUB_ORG}/${SPEC_REPO_NAME}${SUFFIX}"
 IMPL_REPO="${REPO_BASE_DIR}/${GITHUB_ORG}/${IMPL_REPO_NAME}${SUFFIX}"
 
 # 環境変数の設定状況を表示
-echo "環境変数の設定:"
+echo "Environment variables:"
 echo "  REPO_BASE_DIR: $REPO_BASE_DIR"
 echo "  GITHUB_ORG: $GITHUB_ORG"
 echo "  SPEC_REPO_NAME: $SPEC_REPO_NAME"
 echo "  IMPL_REPO_NAME: $IMPL_REPO_NAME"
 echo "  ROLE_DIR: $ROLE_DIR"
+echo "  TEAM_CONFIG: $TEAM_CONFIG"
 echo ""
 
 # リポジトリの存在確認
 if [ ! -d "$SPEC_REPO" ]; then
-    echo "エラー: 仕様リポジトリが見つかりません: $SPEC_REPO"
+    echo "Error: Specification repository not found: $SPEC_REPO"
     exit 1
 fi
 
 if [ ! -d "$IMPL_REPO" ]; then
-    echo "エラー: 実装リポジトリが見つかりません: $IMPL_REPO"
+    echo "Error: Implementation repository not found: $IMPL_REPO"
     exit 1
 fi
 
-# ロールファイルディレクトリの存在確認
+# Check role directory exists
 if [ ! -d "$ROLE_DIR" ]; then
-    echo "エラー: ロール定義ディレクトリが見つかりません: $ROLE_DIR"
+    echo "Error: Role definition directory not found: $ROLE_DIR"
     exit 1
 fi
 
-# ロールファイルを検索（.mdファイルのみ）
-ROLE_FILES=($(find "$ROLE_DIR" -maxdepth 1 -name "*.md" -type f | sort))
-
-if [ ${#ROLE_FILES[@]} -eq 0 ]; then
-    echo "エラー: $ROLE_DIR にロール定義ファイル（*.md）が見つかりません"
+# Check team config exists
+if [ ! -f "$TEAM_CONFIG" ]; then
+    echo "Error: Team configuration file not found: $TEAM_CONFIG"
+    echo "Please create a team-config.yml file or copy team-config.example.yml"
     exit 1
 fi
 
-echo "見つかったロールファイル: ${#ROLE_FILES[@]}個"
-for file in "${ROLE_FILES[@]}"; do
-    echo "  - $(basename "$file")"
+# Check for yq (YAML processor)
+if ! command -v yq &> /dev/null; then
+    echo "Error: yq is required to parse YAML files"
+    echo "Install with: brew install yq (macOS) or see https://github.com/mikefarah/yq"
+    exit 1
+fi
+
+# Read team configuration
+echo "Reading team configuration from $TEAM_CONFIG..."
+ROLES=($(yq eval '.team[]' "$TEAM_CONFIG"))
+
+if [ ${#ROLES[@]} -eq 0 ]; then
+    echo "Error: No roles defined in $TEAM_CONFIG"
+    exit 1
+fi
+
+echo "Team composition:"
+for i in "${!ROLES[@]}"; do
+    echo "  Pane $((i+2)): ${ROLES[$i]}"
 done
 echo ""
 
@@ -121,12 +139,12 @@ CURRENT_WINDOW=$(tmux display-message -p '#I')
 PANE_COUNT=$(tmux list-panes | wc -l)
 
 if [ $PANE_COUNT -ne 1 ]; then
-    echo "エラー: このスクリプトはpaneが1つの状態で実行してください。"
+    echo "Error: This script must be run with exactly one pane."
     exit 1
 fi
 
 # pane1はコントロール用として残す
-echo "paneを作成中..."
+echo "Creating panes..."
 
 # 各ロールファイルに対してpaneを作成
 PANE_NUMBER=2
@@ -150,10 +168,10 @@ for role_file in "${ROLE_FILES[@]}"; do
     # {{IMPL_REPO}}を含むファイルはIMPL_REPO、それ以外はSPEC_REPOを使用
     if grep -q "{{IMPL_REPO}}" "$role_file"; then
         target_repo="$IMPL_REPO"
-        repo_type="実装リポジトリ"
+        repo_type="implementation repository"
     else
         target_repo="$SPEC_REPO"
-        repo_type="仕様リポジトリ"
+        repo_type="specification repository"
     fi
     
     # paneを作成（常に垂直分割）
@@ -173,18 +191,18 @@ for role_file in "${ROLE_FILES[@]}"; do
 done
 
 # すべてのpaneが作成された後、レイアウトを調整して幅を均等にする
-echo "paneの幅を調整中..."
+echo "Adjusting pane widths..."
 tmux select-layout -t "$CURRENT_SESSION:$CURRENT_WINDOW" even-horizontal
 
-echo "チーム構成情報を作成中..."
+echo "Creating team composition..."
 
-# チーム構成の概要を作成
-TEAM_OVERVIEW="=== チーム構成 ===
-このtmuxセッションには以下のメンバーが参加しています：
+# Create team composition overview
+TEAM_OVERVIEW="=== Team Composition ===
+This tmux session includes the following members:
 
-コントロールパネル (Pane 1)
-  - 役割: 全体の制御とコマンド実行
-  - 他のメンバーへのメッセージ送信を担当
+Control Panel (Pane 1)
+  - Role: Overall control and command execution
+  - Responsible for sending messages to other members
 "
 
 # 各メンバーの情報を追加
@@ -194,47 +212,47 @@ for pane_num in "${PANE_NUMBERS[@]}"; do
     
     TEAM_OVERVIEW="${TEAM_OVERVIEW}
 ${role_name} (Pane ${pane_num})
-  - 作業ディレクトリ: ${repo_type}"
+  - Working directory: ${repo_type}"
 done
 
 TEAM_OVERVIEW="${TEAM_OVERVIEW}
 
 ==================="
 
-echo "ロールを割り当て中..."
+echo "Assigning roles..."
 
 # 各paneにロールを送信
 for pane_num in "${PANE_NUMBERS[@]}"; do
     role_file="${PANE_ROLES[$pane_num]}"
     
-    # コミュニケーションコマンドセクションを作成
+    # Create communication command section
     COMM_SECTION="
 
-## 他のメンバーへのコマンド送信方法
+## Sending Commands to Other Members
 
-以下のように役割名を使ってメッセージを送信できます：
+You can send messages using role names as follows:
 
 "
-    # コントロールパネルへの送信コマンド
-    COMM_SECTION="${COMM_SECTION}- コントロールパネルへ: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.1 \"echo '[\\$(date +%H:%M:%S)] メッセージ'\" C-m\`
+    # Command to control panel
+    COMM_SECTION="${COMM_SECTION}- To Control Panel: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.1 \"echo '[\\$(date +%H:%M:%S)] message'\" C-m\`
 "
     
-    # 他の各役割への送信コマンド
+    # Commands to other roles
     for target_pane in "${PANE_NUMBERS[@]}"; do
         if [ $target_pane -ne $pane_num ]; then
             target_role="${PANE_ROLE_NAMES[$target_pane]}"
-            COMM_SECTION="${COMM_SECTION}- ${target_role}へ: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} \$'メッセージ' ; sleep 3; tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} C-m\`
+            COMM_SECTION="${COMM_SECTION}- To ${target_role}: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} \$'message' ; sleep 3; tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.${target_pane} C-m\`
 "
         fi
     done
     
-    # 役割名とpane番号のマッピング情報を追加
+    # Add role-pane mapping
     COMM_SECTION="${COMM_SECTION}
-### 役割とpane番号の対応表
+### Role-Pane Number Mapping
 
-| 役割名 | Pane番号 |
-|--------|----------|
-| コントロールパネル | 1 |"
+| Role Name | Pane Number |
+|-----------|-------------|
+| Control Panel | 1 |"
     
     for mapping_pane in "${PANE_NUMBERS[@]}"; do
         mapping_role="${PANE_ROLE_NAMES[$mapping_pane]}"
@@ -242,14 +260,14 @@ for pane_num in "${PANE_NUMBERS[@]}"; do
 | ${mapping_role} | ${mapping_pane} |"
     done
     
-    # セッション情報セクションを作成
+    # Create session info section
     SESSION_INFO="
 
-## セッション情報
+## Session Information
 
-- 現在のセッション: ${CURRENT_SESSION}
-- 現在のウィンドウ: ${CURRENT_WINDOW}
-- 自分のpane番号: ${pane_num}"
+- Current session: ${CURRENT_SESSION}
+- Current window: ${CURRENT_WINDOW}
+- Your pane number: ${pane_num}"
     
     # ロール内容を読み込み、変数を置換
     ROLE_CONTENT=$(sed -e "s/{{SESSION}}/$CURRENT_SESSION/g" \
@@ -258,11 +276,26 @@ for pane_num in "${PANE_NUMBERS[@]}"; do
                       -e "s|{{SPEC_REPO}}|$SPEC_REPO|g" \
                       "$role_file")
     
-    # 既存のコミュニケーションセクションとセッション情報セクションを削除
-    ROLE_CONTENT=$(echo "$ROLE_CONTENT" | sed '/^## 他のpaneへのコマンド送信方法/,/^## セッション情報/d' | sed '/^## セッション情報/,/^##\|$/d')
+    # Remove existing communication and session info sections
+    ROLE_CONTENT=$(echo "$ROLE_CONTENT" | sed '/^## Communication/,/^## Session Info/d' | sed '/^## Session Info/,/^##\|$/d')
     
-    # チーム構成情報とロール情報を結合
+    # Combine team composition and role information
     FULL_CONTENT="${TEAM_OVERVIEW}
+
+## Common Rules
+
+### Reporting Obligation
+**All roles must report to the person who gave instructions after completing work**
+
+- Starting work: Report '[Role] Starting: [task]'
+- Completing work: Report '[Role] Completed: [task and brief result]'
+- Error occurrence: Report '[Role] Error: [error details]'
+
+### Communication Principles
+- Prioritize reporting to instruction source
+- Keep reports concise and focused
+- Use token-efficient messages
+- Report all status changes via echo
 
 ${ROLE_CONTENT}${COMM_SECTION}${SESSION_INFO}"
     
@@ -271,17 +304,17 @@ ${ROLE_CONTENT}${COMM_SECTION}${SESSION_INFO}"
     sleep 3
     tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$pane_num" C-m
     
-    echo "  Pane $pane_num: ${PANE_ROLE_NAMES[$pane_num]} を割り当てました"
+    echo "  Pane $pane_num: Assigned ${PANE_ROLE_NAMES[$pane_num]}"
 done
 
 echo ""
-echo "セットアップが完了しました！"
+echo "Setup completed!"
 if [ -n "$SUFFIX" ]; then
     echo "worktree: $SUFFIX"
 fi
 echo ""
-echo "各paneの設定："
-echo "  Pane 1: コントロール用（tmux send-keysコマンドを実行）"
+echo "Pane configuration:"
+echo "  Pane 1: Control (execute tmux send-keys commands)"
 
 # 各paneの情報を表示
 for pane_num in "${PANE_NUMBERS[@]}"; do
@@ -291,14 +324,11 @@ for pane_num in "${PANE_NUMBERS[@]}"; do
 done
 
 echo ""
-echo "pane1から各paneにメッセージを送信できます："
+echo "You can send messages from pane1 to each pane:"
 for pane_num in "${PANE_NUMBERS[@]}"; do
     role_name="${PANE_ROLE_NAMES[$pane_num]}"
-    echo "  tmux send-keys -t $CURRENT_SESSION:$CURRENT_WINDOW.$pane_num 'メッセージ' C-m  # ${role_name}へ"
+    echo "  tmux send-keys -t $CURRENT_SESSION:$CURRENT_WINDOW.$pane_num 'message' C-m  # To ${role_name}"
 done
 
 echo ""
-echo "役割定義ファイル："
-for role_file in "${ROLE_FILES[@]}"; do
-    echo "  $role_file"
-done
+echo "Team configuration file: $TEAM_CONFIG"

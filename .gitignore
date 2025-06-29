@@ -21,6 +21,10 @@ logs/
 .env.*.local
 !.env.example
 
+# Team configuration (user-specific)
+team-config.yml
+!team-config.example.yml
+
 # Temporary files
 *.tmp
 *.temp
