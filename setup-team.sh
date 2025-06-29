@@ -291,22 +291,22 @@ When you receive a task, you may then:
 - ✅ Report when complete
 
 ### Reporting Rules
-**Only report AFTER receiving and completing a task:**
-- Starting: '[Role] Starting: [specific task given]'
-- Completing: '[Role] Completed: [task and result]'
-- Error: '[Role] Error: [error details]'
+**MANDATORY: Always report completion to Pane 1 (instructor)**
+- Starting: '[Role] Starting: [task]'
+- Completing: '[Role] Completed: [result]' → MUST send to Pane 1
+- Error: '[Role] Error: [details]'
 
 ### Communication Rules
-- NEVER initiate communication
-- ONLY respond to direct instructions
+- NEVER initiate communication except completion reports
 - Keep all messages extremely brief
-- Use echo for status reports
+- Always report task completion to instructor in Pane 1
 
 ${ROLE_CONTENT}${COMM_SECTION}${SESSION_INFO}"
     
-    # すべての情報を一度に送信
+    # すべての情報を一度に送信（重要：1つのsend-keysコマンドで送信し、Enterは別途送信）
     tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$pane_num" "$FULL_CONTENT"
     sleep 3
+    # Enterキーは別のコマンドで送信（確定のため）
     tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$pane_num" C-m
     
     echo "  Pane $pane_num: Assigned ${PANE_ROLE_NAMES[$pane_num]}"
