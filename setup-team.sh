@@ -118,14 +118,20 @@ fi
 
 # Read team configuration
 echo "Reading team configuration from $TEAM_CONFIG..."
-ROLES=($(yq eval '.team[]' "$TEAM_CONFIG"))
+
+# Read roles into array (compatible with older bash versions)
+ROLES=()
+while IFS= read -r role; do
+    ROLES+=("$role")
+done < <(yq e '.team[]' "$TEAM_CONFIG" 2>/dev/null)
 
 if [ ${#ROLES[@]} -eq 0 ]; then
     echo "Error: No roles defined in $TEAM_CONFIG"
+    echo "Please check your team-config.yml file format"
     exit 1
 fi
 
-echo "Team composition:"
+echo "Found ${#ROLES[@]} roles in configuration:"
 for i in "${!ROLES[@]}"; do
     echo "  Pane $((i+2)): ${ROLES[$i]}"
 done
@@ -143,25 +149,48 @@ if [ $PANE_COUNT -ne 1 ]; then
     exit 1
 fi
 
-# pane1はコントロール用として残す
+# pane1 is reserved for control
 echo "Creating panes..."
 
-# 各ロールファイルに対してpaneを作成
+# Create panes for each role in config
 PANE_NUMBER=2
-# 順序を保証するために通常の配列を使用
+# Arrays to store pane information
 declare -a PANE_NUMBERS
 declare -A PANE_ROLES
 declare -A PANE_REPOS
 declare -A PANE_ROLE_NAMES
+declare -A PANE_ROLE_FILES
 
-for role_file in "${ROLE_FILES[@]}"; do
-    # ファイル名から情報を抽出
-    filename=$(basename "$role_file")
+# Track role instance numbers for duplicate roles
+declare -A ROLE_COUNTS
+
+for role in "${ROLES[@]}"; do
+    echo "Processing role: $role"
     
-    # ファイルから役割名を抽出（最初の#見出しから取得）
+    # Find the role file
+    role_file="$ROLE_DIR/${role}.md"
+    
+    if [ ! -f "$role_file" ]; then
+        echo "Error: Role file not found: $role_file"
+        exit 1
+    fi
+    
+    # Increment role instance count
+    if [ -z "${ROLE_COUNTS[$role]}" ]; then
+        ROLE_COUNTS[$role]=1
+    else
+        ROLE_COUNTS[$role]=$((ROLE_COUNTS[$role] + 1))
+    fi
+    
+    # Extract role name from file
     role_name=$(grep -m 1 "^# " "$role_file" | sed 's/^# //')
     if [ -z "$role_name" ]; then
-        role_name=$(basename "$role_file" .md)
+        role_name=$role
+    fi
+    
+    # Add instance number if multiple instances
+    if [ ${ROLE_COUNTS[$role]} -gt 1 ]; then
+        role_name="${role_name} ${ROLE_COUNTS[$role]}"
     fi
     
     # ファイル内容から必要なリポジトリを判定
@@ -181,9 +210,10 @@ for role_file in "${ROLE_FILES[@]}"; do
     tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$PANE_NUMBER" "claude --dangerously-skip-permissions" C-m
     sleep 3
     
-    # pane情報を保存
+    # Save pane information
     PANE_NUMBERS+=($PANE_NUMBER)
-    PANE_ROLES[$PANE_NUMBER]="$role_file"
+    PANE_ROLES[$PANE_NUMBER]="$role"
+    PANE_ROLE_FILES[$PANE_NUMBER]="$role_file"
     PANE_REPOS[$PANE_NUMBER]="$repo_type"
     PANE_ROLE_NAMES[$PANE_NUMBER]="$role_name"
     
@@ -221,9 +251,9 @@ TEAM_OVERVIEW="${TEAM_OVERVIEW}
 
 echo "Assigning roles..."
 
-# 各paneにロールを送信
+# Send roles to each pane
 for pane_num in "${PANE_NUMBERS[@]}"; do
-    role_file="${PANE_ROLES[$pane_num]}"
+    role_file="${PANE_ROLE_FILES[$pane_num]}"
     
     # Create communication command section
     COMM_SECTION="
