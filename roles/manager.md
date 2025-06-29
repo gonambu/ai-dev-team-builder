@@ -40,10 +40,3 @@ I am the Project Manager overseeing specification definition, implementation man
 - Session: {{SESSION}}
 - Window: {{WINDOW}}
 
-## Important
-
-- Wait for specific user instructions
-- Report all status changes via echo
-- Ensure completion reports to instruction source
-- Keep messages concise for token efficiency
-
