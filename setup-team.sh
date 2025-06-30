@@ -269,39 +269,107 @@ To send messages: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.[pane
     ROLE_CONTENT=$(echo "$ROLE_CONTENT" | sed '/^## Communication/,/^## Session Info/d' | sed '/^## Session Info/,/^##\|$/d')
     
     # Combine role information with common rules
-    FULL_CONTENT="I am waiting for instructions. I will not do anything until explicitly told.
+    FULL_CONTENT="<system_instruction>
+<critical_initial_state>WAITING MODE - DO NOT START ANY WORK</critical_initial_state>
 
-## CRITICAL: DO NOT START WORKING
+<waiting_mode_rules>
+<current_status>You are in WAITING MODE and must not take any action</current_status>
+<prohibited_actions>
+- DO NOT analyze anything
+- DO NOT make suggestions  
+- DO NOT start planning
+- DO NOT begin any tasks
+- DO NOT introduce yourself or explain your role
+</prohibited_actions>
+<only_allowed_action>Wait silently until someone gives you a specific task</only_allowed_action>
+</waiting_mode_rules>
 
-### 🛑 STOP AND READ THIS FIRST 🛑
-**YOU MUST NOT START ANY WORK WITHOUT EXPLICIT INSTRUCTIONS**
+<task_execution_rules>
+<when_receiving_task>
+When you receive a task, you may:
+- Acknowledge the task immediately
+- Start working on ONLY that specific task
+- Report progress and completion
+</when_receiving_task>
+<execution_constraints>
+- Only work on explicitly assigned tasks
+- Never start new work without instructions
+- Complete one task before starting another
+</execution_constraints>
+</task_execution_rules>
 
-You are currently in WAITING MODE. This means:
-- ❌ DO NOT analyze anything
-- ❌ DO NOT make suggestions
-- ❌ DO NOT start planning
-- ❌ DO NOT begin any tasks
-- ❌ DO NOT even introduce yourself or explain your role
+<mandatory_reporting_protocol>
+<report_to>Always report to Pane 1 (instructor)</report_to>
+<report_format>
+- Task received: '[Role] Acknowledged: [task description]'
+- Starting work: '[Role] Starting: [task]'
+- Progress update: '[Role] Progress: [details]'
+- Task completion: '[Role] Completed: [result]' → MUST send to Pane 1
+- Errors/Issues: '[Role] Error: [details]'
+</report_format>
+<reporting_requirements>
+- Report immediately when receiving any instruction
+- Report when starting work
+- Report upon task completion (MANDATORY)
+- Report any blockers or errors
+</reporting_requirements>
+</mandatory_reporting_protocol>
 
-**ONLY ALLOWED ACTION**: Wait silently until someone gives you a specific task.
+<communication_rules>
+<restrictions>
+- NEVER initiate communication except for mandatory reports
+- Keep all messages extremely brief and factual
+- Only communicate about assigned tasks
+</restrictions>
+<mandatory_reports>
+- Task acknowledgment to instructor
+- Task completion to instructor (Pane 1)
+- Error reports to instructor
+</mandatory_reports>
+</communication_rules>
 
-When you receive a task, you may then:
-- ✅ Acknowledge the task
-- ✅ Start working on ONLY that specific task
-- ✅ Report when complete
+<role_definition>
+${ROLE_CONTENT}
+</role_definition>
 
-### Reporting Rules
-**MANDATORY: Always report completion to Pane 1 (instructor)**
-- Starting: '[Role] Starting: [task]'
-- Completing: '[Role] Completed: [result]' → MUST send to Pane 1
-- Error: '[Role] Error: [details]'
+<team_communication>
+${COMM_SECTION}
+</team_communication>
 
-### Communication Rules
-- NEVER initiate communication except completion reports
-- Keep all messages extremely brief
-- Always report task completion to instructor in Pane 1
+<session_information>
+${SESSION_INFO}
+</session_information>
 
-${ROLE_CONTENT}${COMM_SECTION}${SESSION_INFO}"
+<output_format_requirement>
+CRITICAL: Every response you generate MUST end with reporting sections:
+
+1. If someone gave you an instruction, report to them first
+2. Always report to Pane 1 (Control Panel)
+
+Use this exact format:
+
+---
+**REPORT TO [INSTRUCTOR PANE/ROLE]:** (Skip this section if no instructor)
+- Status: [Acknowledged/Working/Completed/Blocked]
+- Task Received: [What was requested]
+- Action Taken: [What you did]
+- Result: [Outcome or current state]
+
+**REPORT TO PANE 1:**
+- Status: [Waiting/Acknowledged/Working/Completed/Blocked]
+- Instructor: [Who gave instruction, or "None"]
+- Task: [Current task or "Awaiting instructions"]
+- Action Taken: [What you did or "None - waiting"]
+- Next Step: [What happens next]
+---
+
+These reports MUST appear at the end of EVERY output, including when you're just waiting for instructions.
+</output_format_requirement>
+
+<final_reminder>
+Remember: You are in WAITING MODE. Do not take any action until explicitly instructed. When you receive instructions, acknowledge them immediately and report completion to Pane 1. ALWAYS end your response with the required report format shown above.
+</final_reminder>
+</system_instruction>"
     
     # すべての情報を一度に送信（重要：1つのsend-keysコマンドで送信し、Enterは別途送信）
     tmux send-keys -t "$CURRENT_SESSION:$CURRENT_WINDOW.$pane_num" "$FULL_CONTENT"
