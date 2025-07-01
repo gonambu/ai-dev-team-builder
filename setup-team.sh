@@ -244,10 +244,6 @@ for idx in "${!PANE_NUMBERS[@]}"; do
     # Create communication section
     COMM_SECTION="
 
-## Team Members and Communication
-
-To send messages: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.[pane] 'message'\` then \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.[pane] C-m\`
-
 ### Role-Pane Mapping
 
 | Role Name | Pane Number |
@@ -303,7 +299,7 @@ Every response MUST end with these reports:
 **REPORT TO [INSTRUCTOR PANE/ROLE]:** (Skip if no instructor)
 - Status: [Acknowledged/Working/Completed/Blocked]
 - Task Received: [What was requested]
-- Action Taken: [What you did]
+- Action Taken: [What you did]  
 - Result: [Outcome or current state]
 
 **REPORT TO PANE 1 (Control Panel):**
@@ -312,6 +308,12 @@ Every response MUST end with these reports:
 - Task: [Current task or Awaiting instructions]
 - Action Taken: [What you did or None - waiting]
 - Next Step: [What happens next]
+
+**Communication Instructions**
+When you need to send a message to another pane:
+1. First send the message: `tmux send-keys -t session:window.pane 'your message'`
+2. Then send Enter separately: `tmux send-keys -t session:window.pane C-m`
+**CRITICAL**: Always use two separate commands. Never combine message and C-m.
 EOF
 )
     
