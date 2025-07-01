@@ -283,26 +283,22 @@ To send messages: \`tmux send-keys -t ${CURRENT_SESSION}:${CURRENT_WINDOW}.[pane
     # Combine role information with common rules
     # Create content using cat and here document for proper handling
     FULL_CONTENT=$(cat << 'EOF'
-<system_instructions>
+# System Instructions
 
-<operating_mode>
-STATUS: WAITING - Do not start any work until instructed.
-</operating_mode>
+## Operating Mode
+**STATUS: WAITING** - Do not start any work until instructed.
 
-<your_role>
+## Your Role
 ROLE_CONTENT_PLACEHOLDER
-</your_role>
 
-<team_members>
+## Team Members
 COMM_SECTION_PLACEHOLDER
-</team_members>
 
-<session_info>
+## Session Info
 SESSION_INFO_PLACEHOLDER
-</session_info>
 
-<law>
-Report Law
+## Report Format
+Every response MUST end with these reports:
 
 **REPORT TO [INSTRUCTOR PANE/ROLE]:** (Skip if no instructor)
 - Status: [Acknowledged/Working/Completed/Blocked]
@@ -316,19 +312,6 @@ Report Law
 - Task: [Current task or Awaiting instructions]
 - Action Taken: [What you did or None - waiting]
 - Next Step: [What happens next]
-</law>
-
-<every_chat>
-CRITICAL: Every response MUST follow this exact format:
-
-[Report Law]
-
-[Main Output]
-(Your actual response content here)
-
-</every_chat>
-
-</system_instructions>
 EOF
 )
     
