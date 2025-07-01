@@ -301,7 +301,9 @@ COMM_SECTION_PLACEHOLDER
 SESSION_INFO_PLACEHOLDER
 </session_info>
 
-<mandatory_law>
+<law>
+Report Law
+
 **REPORT TO [INSTRUCTOR PANE/ROLE]:** (Skip if no instructor)
 - Status: [Acknowledged/Working/Completed/Blocked]
 - Task Received: [What was requested]
@@ -314,17 +316,17 @@ SESSION_INFO_PLACEHOLDER
 - Task: [Current task or Awaiting instructions]
 - Action Taken: [What you did or None - waiting]
 - Next Step: [What happens next]
-</mandatory_law>
+</law>
 
-<output_format_requirement>
+<every_chat>
 CRITICAL: Every response MUST follow this exact format:
 
-[mandatory_law]
+[Report Law]
 
 [Main Output]
 (Your actual response content here)
 
-</output_format_requirement>
+</every_chat>
 
 </system_instructions>
 EOF
